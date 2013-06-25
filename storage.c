@@ -88,12 +88,11 @@ size_t storage__get_block_size(const struct storage__file* c) {
     return c->block_size;
 }
 
-long long int storage__get_number_of_blocks(const struct storage__file* c) {
-    off_t prevpos = ftello(c->index_file);
-    fseeko(c->index_file, 0, SEEK_END);
-    off_t endpos = ftello(c->index_file);
+static long long int get_number_of_blocks(FILE* index_file, int block_group_size) {
+    fseeko(index_file, 0, SEEK_END);
+    off_t endpos = ftello(index_file);
     
-    int len = get_index_entry_size(c);
+    int len = 8+block_group_size*2;
     
     long long int number_of_block_groups = endpos / len;
     
@@ -101,21 +100,74 @@ long long int storage__get_number_of_blocks(const struct storage__file* c) {
         return 0;        
     }
     
-    fseek(c->index_file, (number_of_block_groups-1)*len+8, SEEK_SET);
-    int j=0;
+    fseek(index_file, (number_of_block_groups-1)*len+8, SEEK_SET);
+    int j=0; // number of consecutive empty blocks
     short int ll;
     int i;
-    for(i=0; i<c->block_group_size; ++i) {
-        fread(&ll, 2, 1, c->index_file);
-        if(!ll)break;
-        ++j;
+    /* exclude zero blocks at the end */
+    for(i=0; i<block_group_size; ++i) {
+        fread(&ll, 2, 1, index_file);
+        if(ll) {
+            j=0;
+        } else {
+            ++j;
+        }
     }
+    // not j is number of zero blocks at the end of index
     
-    //fprintf(stderr, "len=%d nobg=%lld j=%d endpos=%lld\n", len, number_of_block_groups, j, endpos);
+    return (number_of_block_groups-1) * block_group_size + (block_group_size-j);
+}
+
+long long int storage__get_number_of_blocks(const struct storage__file* c) {
+    off_t prevpos = ftello(c->index_file);
+    
+    long long int number_of_blocks = get_number_of_blocks(c->index_file, c->block_group_size);
     
     fseeko(c->index_file, prevpos, SEEK_SET);
     
-    return (number_of_block_groups-1) * c->block_group_size + j;
+    return number_of_blocks;
+}
+
+long long int storage__get_number_of_blocks2(const char* dirname, const char* basename) {
+    int block_size, block_group_size;
+    
+    
+    char namebuf[4096];
+    snprintf(namebuf, 4096, "%s/%s.dsc", dirname, basename);
+    FILE* dsc_file = fopen(namebuf, "rb");
+    if(dsc_file==NULL)return -1;
+    
+    int ret = fscanf(dsc_file,"%d%d\n", &block_size, &block_group_size);
+    assert(ret==2);
+    
+    fclose(dsc_file);
+    snprintf(namebuf, 4096, "%s/%s.idx", dirname, basename);
+    FILE* index_file = fopen(namebuf, "rb+");
+    if(index_file==NULL)return -1;
+    
+
+    long long int number_of_blocks = get_number_of_blocks(index_file, block_group_size);
+    
+    fclose(index_file);
+    
+    return number_of_blocks;
+}
+
+
+size_t storage__get_block_size2(const char* dirname, const char* basename) {
+    int block_size, block_group_size;
+    
+    
+    char namebuf[4096];
+    snprintf(namebuf, 4096, "%s/%s.dsc", dirname, basename);
+    FILE* dsc_file = fopen(namebuf, "rb");
+    if(dsc_file==NULL)return -1;
+    
+    int ret = fscanf(dsc_file,"%d%d\n", &block_size, &block_group_size);
+    assert(ret==2);
+    
+    fclose(dsc_file);
+    return block_size;
 }
 
 

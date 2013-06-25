@@ -1,17 +1,20 @@
-all: fsfs-write fsfs-read fsfs-verify
+all: fsfs-write fsfs-read fsfs-verify fsfs-mount
 
 CFLAGS=-O2 -ggdb -Wall
 
 STORAGE = storage.o hash.o
 
-fsfs-write: storage.o hash.o write.c
+fsfs-write: ${STORAGE} write.c
 		${CC} ${LDFALGS} ${CFLAGS} -llzo2 ${STORAGE} write.c -o fsfs-write
 		
-fsfs-read: storage.o hash.o read.c
+fsfs-read: ${STORAGE} read.c
 		${CC} ${LDFALGS} ${CFLAGS} -llzo2 ${STORAGE} read.c -o fsfs-read
 		
-fsfs-verify: storage.o hash.o verify.c
+fsfs-verify: ${STORAGE} verify.c
 		${CC} ${LDFALGS} ${CFLAGS} -llzo2 ${STORAGE} verify.c -o fsfs-verify
+		
+fsfs-mount: ${STORAGE} mount.c
+		${CC} ${LDFLAGS} ${CFLAGS} -llzo2 ${STORAGE} $(shell pkg-config fuse --cflags --libs) mount.c -o fsfs-mount
 
 storage.o: storage.c hash.h
 		${CC} ${CFLAGS} -c storage.c
