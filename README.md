@@ -15,6 +15,13 @@ Extracting:
 
     fsfs-read /path/to/storage/directory name2 > output
     
+Accessing the stored file without extrantion:
+
+    fsfs-mount path/to/storage/directory /path/to/mountpoint
+    mount -o ro path/to/mountpoint/name1 /mnt/name1
+    
+* Writing is not supported. Use [fusecow](https://github.com/vi/fusecow) for simple copy-on-write to mount journalled FS stored in forsnapshotfs.
+
 Storage format
 ---
 
