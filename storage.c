@@ -33,6 +33,8 @@ struct storage__file {
     struct storage__file* deps[64];
     int depscount;
     
+    int opened_for_writing;
+    
     long long int writestat_new;
     long long int writestat_reused;
     long long int writestat_hashcoll;
@@ -223,6 +225,8 @@ struct storage__file* storage__creat(
     c->writestat_reused = 0;
     c->writestat_hashcoll = 0;
     c->writestat_zero = 0;
+    
+    c->opened_for_writing = 1;
 
     return c;
 }
@@ -272,6 +276,8 @@ struct storage__file* storage__open_nodeps(const char* dirname, const char* base
     
     c->outbuf = (unsigned char*)malloc(CHUNK);
     c->depscount = 0;
+    
+    c->opened_for_writing = 0;
     return c;
 }
 
@@ -308,7 +314,7 @@ void storage__flush_index_entry(struct storage__file* c) {
 }
 
 void storage__close(struct storage__file* c) {
-    if (c->current_block % c->block_group_size != 0) {
+    if (c->opened_for_writing && c->current_block % c->block_group_size != 0) {
         storage__flush_index_entry(c);
     }
     free(c->current_index_entry);
@@ -320,6 +326,7 @@ void storage__close(struct storage__file* c) {
 }
 
 static void storage__append_block_simple(struct storage__file* c, unsigned char* buf, unsigned char hash) {
+    assert(c->opened_for_writing!=0);
     int inside_block_group_offset = c->current_block % c->block_group_size;
     if (inside_block_group_offset==0) {
         off_t data_file_offset = ftello(c->data_file);
