@@ -6,7 +6,7 @@ struct simplecow;
 
 
 
-int simplecow_write(struct simplecow *cow, long long int offset, int size, char* buf) ;
+int simplecow_write(struct simplecow *cow, long long int offset, int size, const char* buf) ;
 
 
 int simplecow_read(struct simplecow *cow, long long int offset, int size, char* buf) ;

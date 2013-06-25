@@ -15,6 +15,7 @@
 #include <semaphore.h>
 
 #include "storage.h"
+#include "simplecow.h"
 
 char working_directory[4096];
 
@@ -85,7 +86,11 @@ struct myinfo {
     struct storage__file* f;
     sem_t sem;
     unsigned char *tmpbuf;
+    struct simplecow* cow; // copy on write
+
 };
+
+static int backing_read(void* usr, long long int off, int size, char* b);
 
 static int fsfs_open(const char *path, struct fuse_file_info *fi)
 {
@@ -103,21 +108,17 @@ static int fsfs_open(const char *path, struct fuse_file_info *fi)
 	int bs = storage__get_block_size(i->f);
 	
 	i->tmpbuf=(unsigned char*)malloc(bs);
+	i->cow = simplecow_create(&backing_read, (void*)i);
     
     fi->fh = (uintptr_t)  i;
     
     return 0;
 }
 
-static int fsfs_read(const char *path, char *buf, size_t size, off_t offset,
-		    struct fuse_file_info *fi)
-{
-	struct myinfo* i = (struct myinfo*)(uintptr_t)  fi->fh;
-	if(!i) return -ENOSYS;
-	
-    sem_wait(&i->sem);
-	
-	int bs = storage__get_block_size(i->f);
+int backing_read(void* usr, long long int offset, int size, char* buf) {
+    struct myinfo* i  = (struct myinfo*)usr;
+    
+    int bs = storage__get_block_size(i->f);
 	
 	int counter=0;
 	for(;size>0;) {
@@ -138,17 +139,39 @@ static int fsfs_read(const char *path, char *buf, size_t size, off_t offset,
 	    offset+=size_to_copy;
 	    counter+=size_to_copy;
 	}
-    sem_post(&i->sem);
 	return counter;
+}
+
+static int fsfs_read(const char *path, char *buf, size_t size, off_t offset,
+		    struct fuse_file_info *fi)
+{
+	struct myinfo* i = (struct myinfo*)(uintptr_t)  fi->fh;
+	if(!i) return -ENOSYS;
 	
-    /*int res;
+    sem_wait(&i->sem);
+	
+	int ret = simplecow_read(i->cow, offset, size, buf);
+	
+	
+    sem_post(&i->sem);
+	return ret;
 
-	(void) path;
-	res = pread(fi->fh, buf, size, offset);
-	if (res == -1)
-		res = -errno;
+}
 
-	return res;*/
+
+static int fsfs_write(const char *path, const char *buf, size_t size, off_t offset,
+		    struct fuse_file_info *fi)
+{
+	struct myinfo* i = (struct myinfo*)(uintptr_t)  fi->fh;
+	if(!i) return -ENOSYS;
+	
+    sem_wait(&i->sem);
+	
+	int ret = simplecow_write(i->cow, offset, size, buf);
+	
+    sem_post(&i->sem);
+	return ret;
+
 }
 
 static int fsfs_release(const char *path, struct fuse_file_info *fi)
@@ -159,6 +182,7 @@ static int fsfs_release(const char *path, struct fuse_file_info *fi)
 	if(!i) return -ENOSYS;
 	
     storage__close(i->f);
+	simplecow_destroy(i->cow);
 	sem_destroy(&i->sem);
 	free(i->tmpbuf);
 
@@ -171,6 +195,7 @@ static struct fuse_operations fsfs_oper = {
 	.readdir	= fsfs_readdir,
 	.open		= fsfs_open,
 	.read		= fsfs_read,
+	.write		= fsfs_write,
 	.release	= fsfs_release,
 
 	.flag_nullpath_ok = 1,

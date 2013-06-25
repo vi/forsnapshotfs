@@ -21,7 +21,7 @@ struct simplecow {
 };
 
 
-int simplecow_write(struct simplecow *cow, long long int offset, int size, char* buf) {
+int simplecow_write(struct simplecow *cow, long long int offset, int size, const char* buf) {
     if(cow->extent_count == cow->extent_capacity || cow->extents == NULL) {
         cow->extent_capacity*=2;
         cow->extents = realloc(cow->extents, cow->extent_capacity*sizeof(struct extent));
@@ -103,11 +103,12 @@ int simplecow_read1(struct simplecow *cow, long long int offset, int size, char*
 
 
 int simplecow_read(struct simplecow *cow, long long int offset, int size, char* buf) {
-    while(size>0) {
-        int ret = simplecow_read1(cow, offset, size, buf);
+    int s = size;
+    while(s>0) {
+        int ret = simplecow_read1(cow, offset, s, buf);
         buf+=ret;
         offset+=ret;
-        size-=ret;
+        s-=ret;
     }
     return size;
 }
