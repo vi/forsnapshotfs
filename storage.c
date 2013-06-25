@@ -430,7 +430,11 @@ int storage__read_block_nonrecursive(
         assert(ret==0);
         
         ret = fread((char*)c->current_index_entry, 1, len, c->index_file);
-        assert(ret == len);
+        if(ret<len) {
+            /* Probably trying to read past the end of file. Feed zero blocks */
+            memset(buf, 0, c->block_size);
+            return 0;
+        }
         
         int i;
         for(i=0; i<c->block_group_size; ++i) {
