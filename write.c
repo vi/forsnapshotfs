@@ -15,6 +15,16 @@ int main(int argc, char* argv[]) {
     const char* basename = argv[2];
     const char* depname = argv[3];
     
+    { // check for already existing file
+        char namebuf[4096];
+        snprintf(namebuf, 4096, "%s/%s.idx", dirname, basename);
+        FILE* existing_file = fopen(namebuf, "r");
+        if(existing_file) {
+            fprintf(stderr, "%s already exists, refusing to overwrite\n", namebuf);
+            return 3;
+        }
+    }
+    
     struct storage__file* f = storage__creat(dirname, basename, depname);
     int len = storage__get_block_size(f);
     unsigned char *buf = (unsigned char*)malloc(len);
