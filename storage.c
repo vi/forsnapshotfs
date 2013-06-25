@@ -142,7 +142,7 @@ long long int storage__get_number_of_blocks2(const char* dirname, const char* ba
     
     fclose(dsc_file);
     snprintf(namebuf, 4096, "%s/%s.idx", dirname, basename);
-    FILE* index_file = fopen(namebuf, "rb+");
+    FILE* index_file = fopen(namebuf, "rb");
     if(index_file==NULL)return -1;
     
 
@@ -246,19 +246,19 @@ struct storage__file* storage__open_nodeps(const char* dirname, const char* base
     {
         char namebuf[4096];
         snprintf(namebuf, 4096, "%s/%s.dat", dirname, basename);
-        c->data_file = fopen(namebuf, "rb+");
+        c->data_file = fopen(namebuf, "rb");
         assert(c->data_file != NULL);
         
         snprintf(namebuf, 4096, "%s/%s.idx", dirname, basename);
-        c->index_file = fopen(namebuf, "rb+");
+        c->index_file = fopen(namebuf, "rb");
         assert(c->index_file != NULL);
         
         snprintf(namebuf, 4096, "%s/%s.dsc", dirname, basename);
-        c->description_file = fopen(namebuf, "rb+");
+        c->description_file = fopen(namebuf, "rb");
         assert(c->description_file != NULL);
         
         snprintf(namebuf, 4096, "%s/%s.hsh", dirname, basename);
-        c->hash_file = fopen(namebuf, "rb+");
+        c->hash_file = fopen(namebuf, "rb");
         assert(c->hash_file != NULL);
     }
     int ret;
@@ -453,6 +453,8 @@ int storage__read_block_nonrecursive(
     }
     
     len = c->current_index_entry->offsets[inside_block_group_offset];
+    //fprintf(stderr, "QQQQ inside_block_group_offset=%04x block_group_offset=%lld len=%04x\n",
+    //        inside_block_group_offset, block_group_offset, len);
     if(len==0) {
         memset(buf, 0, c->block_size);
         return 0;
