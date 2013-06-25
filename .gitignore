@@ -1,0 +1,11 @@
+*.o
+read
+write
+stuff
+in
+*.dat
+*.dsc
+*.hsh
+*.idx
+mount
+verify
