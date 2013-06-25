@@ -16,6 +16,8 @@
 
 #include "storage.h"
 
+char working_directory[4096];
+
 static int fsfs_getattr(const char *path, struct stat *stbuf)
 {
 	if(!path) return -ENOSYS;
@@ -29,19 +31,19 @@ static int fsfs_getattr(const char *path, struct stat *stbuf)
     int ret1, ret2, ret3;
     char namebuf[4096];
 	
-    snprintf(namebuf, 4096, "%s.idx", path+1);
+    snprintf(namebuf, 4096, "%s/%s.idx", working_directory,path+1);
     ret1 = stat(namebuf, stbuf);
-    snprintf(namebuf, 4096, "%s.dsc", path+1);
+    snprintf(namebuf, 4096, "%s/%s.dsc", working_directory,path+1);
     ret2 = stat(namebuf, stbuf);
-    snprintf(namebuf, 4096, "%s.dat", path+1);
+    snprintf(namebuf, 4096, "%s/%s.dat", working_directory,path+1);
     ret3 = stat(namebuf, stbuf);
 	
 	if(ret1 || ret2 || ret3) {
 	   return -errno;   
 	}
 	
-    long long int q = storage__get_number_of_blocks2(".",path+1);
-    size_t w = storage__get_block_size2(".", path+1);
+    long long int q = storage__get_number_of_blocks2(working_directory,path+1);
+    size_t w = storage__get_block_size2(working_directory, path+1);
     stbuf->st_size = q * w;
     stbuf->st_blocks = stbuf->st_size / 512;
 	return 0;
@@ -57,7 +59,7 @@ static int fsfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	(void) offset;
 	(void) fi;
 
-	dp = opendir(".");
+	dp = opendir(working_directory);
 	if (dp == NULL)
 		return -errno;
 
@@ -92,7 +94,7 @@ static int fsfs_open(const char *path, struct fuse_file_info *fi)
     if(ret) return ret;
     
     const char* basename = path+1;
-    const char* dirname = "."; // use current directory
+    const char* dirname = working_directory;
     
     struct myinfo* i = (struct myinfo*)malloc(sizeof *i);
     i->f = storage__open(dirname, basename);
@@ -176,6 +178,14 @@ static struct fuse_operations fsfs_oper = {
 
 int main(int argc, char *argv[])
 {
-	umask(0);
-	return fuse_main(argc, argv, &fsfs_oper, NULL);
+    if(argc<3) {
+        fprintf(stderr, "Usage: fsfs-mount directory mountpoint [FUSE options]\n");
+        return 1;
+    }
+    if(chdir(argv[1])) {
+        perror("chdir");
+        return 2;
+    }
+    getcwd(working_directory, 4096);
+	return fuse_main(argc-1, argv+1, &fsfs_oper, NULL);
 }
