@@ -5,15 +5,15 @@ Usage
 
 Storing the first file:
 
-    write /path/to/storage/directory name1 < /dev/mapper/vg-vn1
+    fsfs-write /path/to/storage/directory name1 < /dev/mapper/vg-vn1
     
 Storing the modified version of the file (based on "name1"):
 
-    write /path/to/storage/directory name2 name1 < /dev/mapper/vg-vn1
+    fsfs-write /path/to/storage/directory name2 name1 < /dev/mapper/vg-vn1
 
 Extracting:
 
-    read /path/to/storage/directory name2 > output
+    fsfs-read /path/to/storage/directory name2 > output
     
 Storage format
 ---

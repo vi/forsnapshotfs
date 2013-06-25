@@ -1,17 +1,17 @@
-all: write read verify
+all: fsfs-write fsfs-read fsfs-verify
 
 CFLAGS=-O2 -ggdb -Wall
 
 STORAGE = storage.o hash.o
 
-write: storage.o hash.o write.c
-		${CC} ${LDFALGS} ${CFLAGS} -llzo2 ${STORAGE} write.c -o write
+fsfs-write: storage.o hash.o write.c
+		${CC} ${LDFALGS} ${CFLAGS} -llzo2 ${STORAGE} write.c -o fsfs-write
 		
-read: storage.o hash.o read.c
-		${CC} ${LDFALGS} ${CFLAGS} -llzo2 ${STORAGE} read.c -o read
+fsfs-read: storage.o hash.o read.c
+		${CC} ${LDFALGS} ${CFLAGS} -llzo2 ${STORAGE} read.c -o fsfs-read
 		
-verify: storage.o hash.o verify.c
-		${CC} ${LDFALGS} ${CFLAGS} -llzo2 ${STORAGE} verify.c -o verify
+fsfs-verify: storage.o hash.o verify.c
+		${CC} ${LDFALGS} ${CFLAGS} -llzo2 ${STORAGE} verify.c -o fsfs-verify
 
 storage.o: storage.c hash.h
 		${CC} ${CFLAGS} -c storage.c
