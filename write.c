@@ -1,25 +1,34 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
+#include <assert.h>
 
 #include "storage.h"
 
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
-        fprintf(stderr, "Usage: fsfs-write directory name [previous_name|NULL [block_size [block_group_size]]] < input\n");
+        fprintf(stderr, "Usage: fsfs-write [-9] directory name [previous_name|NULL [block_size [block_group_size]]] < input\n");
         fprintf(stderr, "   \n");
         return 1;
     }
     
+    int best_compression = 0;
+    
+    if(!strcmp(argv[1],"-9")) {
+        best_compression = 1;
+        --argc;
+        ++argv;
+    }
+    
     const char* dirname = argv[1];
     const char* basename = argv[2];
+    assert(basename!=NULL);
     const char* depname = argv[3];
     
     
     int block_size = 4096;
     int block_group_size = 1020;
-    int best_compression = 0;
     
     if(argc>=5)sscanf(argv[4],"%d",&block_size);
     if(argc>=6)sscanf(argv[5],"%d",&block_group_size);
