@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[]) {
     if (argc != 3 ) {
-        fprintf(stderr, "Usage: forsnapshotfs/verify directory name\n");
+        fprintf(stderr, "Usage: fsfs-verify directory name\n");
         return 1;
     }
     

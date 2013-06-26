@@ -7,7 +7,7 @@
 
 int main(int argc, char* argv[]) {
     if (argc != 3 && argc != 4) {
-        fprintf(stderr, "Usage: forsnapshotfs/write directory name [previous_name] < input\n");
+        fprintf(stderr, "Usage: fsfs-write directory name [previous_name] < input\n");
         return 1;
     }
     

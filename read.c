@@ -5,7 +5,7 @@
 
 int main(int argc, char* argv[]) {
     if (argc != 3 ) {
-        fprintf(stderr, "Usage: forsnapshotfs/read directory name  > output\n");
+        fprintf(stderr, "Usage: fsfs-read directory name  > output\n");
         return 1;
     }
     
