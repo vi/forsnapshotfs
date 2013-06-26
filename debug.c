@@ -64,8 +64,11 @@ int main(int argc, char* argv[]) {
                 q = be16toh(q);
                 
                 printf("block %lld: ", i + bgstart*bgsize);
-                if(q==0) {
+                if(q==-0x8000) {
                     printf("zero\n");
+                } else
+                if(q==0) {
+                    printf("unallocated\n");
                 } else
                 if(q>0 && q<0x4444) {
                     printf("compressed (%d bytes) at 0x%016llX\n", q, baseoffset+accum);
@@ -121,18 +124,17 @@ int main(int argc, char* argv[]) {
                 
                 if(q>0) {
                     ++stats[q];
-                    trailing_zero_counter=0;
+                }else
+                if(q==-0x8000) {
+                    ++zeroes;
                 }else
                 if(q==0) {
-                    ++zeroes;
                     ++trailing_zero_counter;
                 }else
                 if(q<0 && q>=-64) {
                     ++refs[(-q)-1];
-                    trailing_zero_counter=0;
                 }else{
                     ++invals;
-                    trailing_zero_counter=0;
                 }
                 ++total;
             }

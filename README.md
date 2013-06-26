@@ -20,7 +20,8 @@ Accessing the stored file without extrantion:
     fsfs-mount path/to/storage/directory /path/to/mountpoint
     mount -o ro,loop /path/to/mountpoint/name1 /mnt/name1
     
-* There is built-in simple in-memory copy-on-write for replaying journaled filesystems. Changes are preserved until the file is closed.
+* There is built-in simple in-memory copy-on-write for replaying 
+journaled filesystems. Changes are preserved until the file is closed.
 
 Storage format
 ---
@@ -32,11 +33,18 @@ dsc file have two decimal numbers (block size and number of blocks in a block gr
     4096 1020
     root_20130429
 
-idx file contains 2048-byte entries, each descibing 1020 blocks. It is 8 bytes of big endian base offset in the dat file, for this block group, followed by 1020 2-byte signed big endian numbers (0 - zero block, positive - length of this block compressed, negative - this block is not stored here and should be retrieved from a dependency). Blocks are currently 4096 bytes each.
+idx file contains 2048-byte entries, 
+each descibing 1020 blocks. It is 8 bytes of big endian base 
+offset in the dat file, for this block group, followed by 1020 2-byte 
+signed big endian numbers (0 - unallocated block (near the end of file), 
+positive - length of this block compressed, negative - this block is 
+not stored here and should be retrieved from a dependency, 0x8000 - 
+zero block). Blocks are currently 4096 bytes each.
 
 dat file contains lzo1x-compressed blocks contatenated, referenced by idx file.
 
-hsh file contains 8-bit pearsong-style hashes of blocks. i'th byte of this file correspond to i'th block.
+hsh file contains 8-bit pearsong-style hashes of blocks. i'th byte of 
+this file correspond to i'th block.
 
 Example:
 
@@ -77,7 +85,7 @@ Example:
         
     qqq.idx:
     
-        0x0000: 0000000000000000 FFFF FFFF FFFF 1036 FFFF 0000 0000 ...
+        0x0000: 0000000000000000 FFFF FFFF FFFF 1036 FFFF 8000 8000 ...
         0x0800: 0000000000001036 FFFF 0000 0000 ...
         0x1000: end of file
         
@@ -100,7 +108,7 @@ Example:
         
     qqq2.idx:
     
-        0x0000: 0000000000000000 FFFE FFFE FFFE FFFF FFFE 0000 0000 ...
+        0x0000: 0000000000000000 FFFE FFFE FFFE FFFF FFFE 8000 8000 ...
         0x0800: 0000000000000000 FFFE 0000 0000 ...
         0x1000: end of file
         

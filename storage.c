@@ -377,7 +377,6 @@ void storage__append_block(struct storage__file* c, unsigned char* buf) {
         if(hc==hash) {
             int ret = storage__read_block_nonrecursive(c->deps[i], c->outbuf, c->current_block);
             if(ret!=0){
-                //fprintf(stderr, "Double reference. Should not happen.\n");
                 ++c->writestat_dblrefs;
                 continue;
             }
@@ -391,6 +390,21 @@ void storage__append_block(struct storage__file* c, unsigned char* buf) {
             }
         }
     }
+    
+    if(hash==0) {
+        // maybe the entire block is zero?
+        int j;
+        for (j=c->block_size; j>=0; --j) {
+            if(buf[j])break;   
+        }
+        if(j==-1) {
+            // the block is zero
+            storage__append_block_dep(c, -0x8000, 0);
+            ++c->writestat_zero;
+            return;
+        }
+    }
+        
     ++c->writestat_new;
     storage__append_block_simple(c, buf, hash);
 }
@@ -463,8 +477,13 @@ int storage__read_block_nonrecursive(
     //fprintf(stderr, "QQQQ inside_block_group_offset=%04x block_group_offset=%lld len=%04x\n",
     //        inside_block_group_offset, block_group_offset, len);
     if(len==0) {
+        // reading past the EOF? feed zeroes
         memset(buf, 0, c->block_size);
         return 0;
+    } else
+    if(len==-0x8000) {
+        memset(buf, 0, c->block_size);
+        return 0;        
     }else
     if(len<0) {
         return -len;
