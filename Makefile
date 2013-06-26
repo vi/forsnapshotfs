@@ -1,4 +1,4 @@
-all: fsfs-write fsfs-read fsfs-verify fsfs-mount
+all: fsfs-write fsfs-read fsfs-verify fsfs-mount fsfs-debug
 
 CFLAGS=-O2 -ggdb -Wall
 
@@ -13,6 +13,9 @@ fsfs-read: ${STORAGE} read.c
 fsfs-verify: ${STORAGE} verify.c
 		${CC} ${LDFALGS} ${CFLAGS} -llzo2 ${STORAGE} verify.c -o fsfs-verify
 		
+fsfs-debug: hash.o debug.c
+		${CC} ${LDFALGS} ${CFLAGS} -llzo2 hash.o debug.c -o fsfs-debug
+
 fsfs-mount: ${STORAGE} mount.c simplecow.c
 		${CC} ${LDFLAGS} ${CFLAGS} -llzo2 ${STORAGE} $(shell pkg-config fuse --cflags --libs) simplecow.c mount.c -o fsfs-mount
 
