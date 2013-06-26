@@ -13,6 +13,7 @@ int main(int argc, char* argv[]) {
             "    fsfs-debug comp-stats blockgroup_size file.idx\n"
             "    fsfs-debug decompress-block file.dat offset compressed_size > output\n"
             "    fsfs-debug decompress-block2 < input > output\n"
+            "    fsfs-debug compress-block < input > output\n"
             "    fsfs-debug compress-block2 < input > output\n"
             "    fsfs-debug calculate-hash < input\n"
         );
@@ -212,7 +213,7 @@ int main(int argc, char* argv[]) {
         fwrite(chunk2, 1, len, stdout);
         return 0;
     } else
-    if(!strcmp(argv[1], "compress-block2")) {
+    if(!strcmp(argv[1], "compress-block")) {
         unsigned char chunk[65536];
         unsigned char chunk2[65536+2048];
         int ret = fread(&chunk, 1, 65536, stdin);
@@ -220,6 +221,19 @@ int main(int argc, char* argv[]) {
         char tmp[LZO1X_1_MEM_COMPRESS];
         lzo_uint len = 65536+2048;
         lzo1x_1_compress(chunk, ret, chunk2, &len, &tmp);
+        
+        fwrite(chunk2, 1, len, stdout);
+        
+        return 0;
+    } else
+    if(!strcmp(argv[1], "compress-block2")) {
+        unsigned char chunk[65536];
+        unsigned char chunk2[65536+2048];
+        int ret = fread(&chunk, 1, 65536, stdin);
+        
+        char tmp[LZO1X_999_MEM_COMPRESS];
+        lzo_uint len = 65536+2048;
+        lzo1x_999_compress(chunk, ret, chunk2, &len, &tmp);
         
         fwrite(chunk2, 1, len, stdout);
         

@@ -34,6 +34,7 @@ struct storage__file {
     int depscount;
     
     int opened_for_writing;
+    int best_compression;
     
     long long int writestat_new;
     long long int writestat_reused;
@@ -183,7 +184,7 @@ static void write_descriptor_file(struct storage__file* c) {
 
 struct storage__file* storage__creat(
             const char* dirname, const char* basename, const char* depname, 
-            int block_size, int block_group_size) {
+            int block_size, int block_group_size, int best_compression) {
     struct storage__file* c;
     assert(block_size < 32768 && block_size > 0);
     assert(block_group_size > 0 && block_group_size < 32768);
@@ -231,6 +232,7 @@ struct storage__file* storage__creat(
     c->writestat_zero = 0;
     
     c->opened_for_writing = 1;
+    c->best_compression=best_compression;
 
     return c;
 }
@@ -337,9 +339,14 @@ static void storage__append_block_simple(struct storage__file* c, unsigned char*
         c->current_index_entry->base_offset = data_file_offset;
     }
     
-    char tmp[LZO1X_1_MEM_COMPRESS];
     lzo_uint len = CHUNK;
-    lzo1x_1_compress(buf, c->block_size, c->outbuf, &len, &tmp);
+    if (!c->best_compression) {
+        char tmp[LZO1X_1_MEM_COMPRESS];
+        lzo1x_1_compress(buf, c->block_size, c->outbuf, &len, &tmp);
+    } else {
+        char tmp[LZO1X_999_MEM_COMPRESS];
+        lzo1x_999_compress(buf, c->block_size, c->outbuf, &len, &tmp);        
+    }
     
     //fprintf(stderr, "off=%lld len=%d cb=%lld\n", data_file_offset, len, c->current_block);
     int written = fwrite(c->outbuf, 1, len, c->data_file);

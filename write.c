@@ -19,6 +19,7 @@ int main(int argc, char* argv[]) {
     
     int block_size = 4096;
     int block_group_size = 1020;
+    int best_compression = 0;
     
     if(argc>=5)sscanf(argv[4],"%d",&block_size);
     if(argc>=6)sscanf(argv[5],"%d",&block_group_size);
@@ -35,7 +36,8 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    struct storage__file* f = storage__creat(dirname, basename, depname, block_size, block_group_size);
+    struct storage__file* f = storage__creat(dirname, basename, depname, 
+                                             block_size, block_group_size, best_compression);
     int len = storage__get_block_size(f);
     unsigned char *buf = (unsigned char*)malloc(len);
     int ret;
