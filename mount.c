@@ -47,6 +47,7 @@ static int fsfs_getattr(const char *path, struct stat *stbuf)
     size_t w = storage__get_block_size2(working_directory, path+1);
     stbuf->st_size = q * w;
     stbuf->st_blocks = stbuf->st_size / 512;
+    stbuf->st_mode = S_IFREG | 0666;
 	return 0;
 }
 
@@ -113,6 +114,11 @@ static int fsfs_open(const char *path, struct fuse_file_info *fi)
     fi->fh = (uintptr_t)  i;
     
     return 0;
+}
+
+static int fsfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
+{
+	return fsfs_open(path, fi);
 }
 
 int backing_read(void* usr, long long int offset, int size, char* buf) {
@@ -190,14 +196,23 @@ static int fsfs_release(const char *path, struct fuse_file_info *fi)
 }
 
 
+static int fsfs_truncate(const char *path, off_t size)
+{
+	return 0;
+}
+
 static struct fuse_operations fsfs_oper = {
 	.getattr	= fsfs_getattr,
 	.readdir	= fsfs_readdir,
 	.open		= fsfs_open,
+	.create		= fsfs_create,
 	.read		= fsfs_read,
 	.write		= fsfs_write,
 	.release	= fsfs_release,
-
+	
+	.truncate  = fsfs_truncate,
+	
+	
 	.flag_nullpath_ok = 1,
 };
 
