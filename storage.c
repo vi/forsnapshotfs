@@ -76,6 +76,7 @@ static void open_deps(struct storage__file* c, const char* dirname, const char* 
             
         //fprintf(stderr, "Additional storage: %s\n", namebuf);
         struct storage__file* dep = storage__open_nodeps(dirname, namebuf);
+        assert(dep->block_size == c->block_size);
         c->deps[c->depscount++] = dep;
         if(c->depscount==64) break;
     }
@@ -181,8 +182,11 @@ static void write_descriptor_file(struct storage__file* c) {
 }
 
 struct storage__file* storage__creat(
-            const char* dirname, const char* basename, const char* depname) {
+            const char* dirname, const char* basename, const char* depname, 
+            int block_size, int block_group_size) {
     struct storage__file* c;
+    assert(block_size < 32768 && block_size > 0);
+    assert(block_group_size > 0 && block_group_size < 32768);
     c = (struct storage__file*)malloc(sizeof(struct storage__file));
     assert(c!=NULL);
     {
@@ -203,8 +207,8 @@ struct storage__file* storage__creat(
         c->hash_file = fopen(namebuf, "wb+");
         assert(c->hash_file != NULL);
     }
-    c->block_size = 4096;
-    c->block_group_size = 1020;
+    c->block_size = block_size;
+    c->block_group_size = block_group_size;
     c->current_block = 0;
     
     c->current_index_entry = (struct index_entry*)malloc(get_index_entry_size(c));

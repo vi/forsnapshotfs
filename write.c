@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    struct storage__file* f = storage__creat(dirname, basename, depname);
+    struct storage__file* f = storage__creat(dirname, basename, depname, 4096, 1020);
     int len = storage__get_block_size(f);
     unsigned char *buf = (unsigned char*)malloc(len);
     int ret;

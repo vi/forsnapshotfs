@@ -6,7 +6,8 @@ size_t storage__get_block_size2(const char* dirname, const char* basename) ;
 
 // for writing only
 struct storage__file* storage__creat(
-            const char* dirname, const char* basename, const char* depname) ;
+            const char* dirname, const char* basename, const char* depname,
+            int block_size, int block_group_size) ;
     
 // for reading only
 struct storage__file* storage__open(
