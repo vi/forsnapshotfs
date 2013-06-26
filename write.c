@@ -6,8 +6,9 @@
 
 
 int main(int argc, char* argv[]) {
-    if (argc != 3 && argc != 4) {
-        fprintf(stderr, "Usage: fsfs-write directory name [previous_name] < input\n");
+    if (argc < 3) {
+        fprintf(stderr, "Usage: fsfs-write directory name [previous_name|NULL [block_size [block_group_size]]] < input\n");
+        fprintf(stderr, "   \n");
         return 1;
     }
     
@@ -15,6 +16,15 @@ int main(int argc, char* argv[]) {
     const char* basename = argv[2];
     const char* depname = argv[3];
     
+    
+    int block_size = 4096;
+    int block_group_size = 1020;
+    
+    if(argc>=5)sscanf(argv[4],"%d",&block_size);
+    if(argc>=6)sscanf(argv[5],"%d",&block_group_size);
+    
+    if(depname && !strcmp(depname,"NULL")) depname=NULL;
+        
     { // check for already existing file
         char namebuf[4096];
         snprintf(namebuf, 4096, "%s/%s.idx", dirname, basename);
@@ -25,7 +35,7 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    struct storage__file* f = storage__creat(dirname, basename, depname, 4096, 1020);
+    struct storage__file* f = storage__creat(dirname, basename, depname, block_size, block_group_size);
     int len = storage__get_block_size(f);
     unsigned char *buf = (unsigned char*)malloc(len);
     int ret;
