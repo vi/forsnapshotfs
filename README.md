@@ -39,7 +39,7 @@ offset in the dat file, for this block group, followed by 1020 2-byte
 signed big endian numbers (0 - unallocated block (near the end of file), 
 positive - length of this block compressed, negative - this block is 
 not stored here and should be retrieved from a dependency, 0x8000 - 
-zero block). Blocks are currently 4096 bytes each.
+zero block, 0x8001 - uncompressed block). Blocks are usually 4096 bytes each.
 
 dat file contains lzo1x-compressed blocks contatenated, referenced by idx file.
 
