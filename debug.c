@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <lzo/lzo1x.h>
 #include "hash.h"
+#include "storage.h"
 
 int main(int argc, char* argv[]) {
     if(argc<2 || !strcmp(argv[1], "--help")) {
@@ -16,6 +17,8 @@ int main(int argc, char* argv[]) {
             "    fsfs-debug compress-block < input > output\n"
             "    fsfs-debug compress-block2 < input > output\n"
             "    fsfs-debug calculate-hash < input\n"
+            "    fsfs-debug get-length dir name\n"
+            "    fsfs-debug read-one-block dir name blocknum\n"
         );
         return 1;   
     }
@@ -257,6 +260,29 @@ int main(int argc, char* argv[]) {
         int ret = fread(&chunk, 1, 65536, stdin);
         unsigned char c = phash(chunk, ret);
         printf("%02x\n", c);
+        return 0;
+    } else
+    if(!strcmp(argv[1], "get-length")) {
+        assert(argc==4);
+        const char* dirname = argv[2];
+        const char* basename = argv[3];
+        int block_len = storage__get_block_size2(dirname, basename);
+        long long int number_of_blocks = storage__get_number_of_blocks2(dirname, basename);
+        printf("%lld\n", number_of_blocks*block_len);
+        return 0;
+    } else
+    if(!strcmp(argv[1], "read-one-block")) {
+        assert(argc==5);
+        const char* dirname = argv[2];
+        const char* basename = argv[3];
+        long long int blocknum;
+        sscanf(argv[4], "%lld", &blocknum);
+        struct storage__file* f = storage__open(dirname, basename);
+        int block_len = storage__get_block_size(f);
+        
+        unsigned char buf[65536];
+        storage__read_block(f, buf, blocknum);
+        fwrite(buf, 1, block_len, stdout);
         return 0;
     } else {
         fprintf(stderr, "Unknown command %s\n", argv[1]);
