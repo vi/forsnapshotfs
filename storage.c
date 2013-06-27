@@ -348,9 +348,16 @@ static void storage__append_block_simple(struct storage__file* c, unsigned char*
         lzo1x_999_compress(buf, c->block_size, c->outbuf, &len, &tmp);        
     }
     
-    //fprintf(stderr, "off=%lld len=%d cb=%lld\n", data_file_offset, len, c->current_block);
-    int written = fwrite(c->outbuf, 1, len, c->data_file);
-    assert(written == len);
+    if (len >= c->block_size*63/64) {
+        // this block looks uncompressible or poorly compressible
+        
+        int written = fwrite(buf, 1, c->block_size, c->data_file);
+        assert(written == c->block_size);
+        len = -0x7FFF; // 80 01  on disk
+    } else {
+        int written = fwrite(c->outbuf, 1, len, c->data_file);
+        assert(written == len);
+    }
     
     c->current_index_entry->offsets[inside_block_group_offset] = len;
     
@@ -480,8 +487,11 @@ int storage__read_block_nonrecursive(
     off_t compressed_start = c->current_index_entry->base_offset;
     for(i=0; i<inside_block_group_offset; ++i) {
         if(c->current_index_entry->offsets[i]>0) {
-            compressed_start+=c->current_index_entry->offsets[i];
-        }
+            compressed_start += c->current_index_entry->offsets[i];
+        }else
+        if(c->current_index_entry->offsets[i]==-0x7FFF) {
+            compressed_start += c->block_size;
+        }   
     }
     
     len = c->current_index_entry->offsets[inside_block_group_offset];
@@ -496,6 +506,9 @@ int storage__read_block_nonrecursive(
         memset(buf, 0, c->block_size);
         return 0;        
     }else
+    if(len==-0x7FFF){
+        // uncompressed block
+    }else
     if(len<0) {
         return -len;
     }
@@ -504,12 +517,18 @@ int storage__read_block_nonrecursive(
     ret = fseeko(c->data_file, compressed_start, SEEK_SET);
     assert(ret==0);
     
-    ret = fread(c->outbuf, 1, len, c->data_file);
-    assert(ret==len);
+    if(len!=-0x7FFF) {
+        ret = fread(c->outbuf, 1, len, c->data_file);
+        assert(ret==len);
+        
+        lzo_uint decomp_size = c->block_size;
+        memset(buf, 0, decomp_size);
+        lzo1x_decompress_safe(c->outbuf, len, buf, &decomp_size, NULL);
+    } else {
+        ret = fread(buf, 1, c->block_size, c->data_file);
+        assert(ret==c->block_size);
+    }
     
-    lzo_uint decomp_size = c->block_size;
-    memset(buf, 0, decomp_size);
-    lzo1x_decompress_safe(c->outbuf, len, buf, &decomp_size, NULL);
     return 0;
 }
 

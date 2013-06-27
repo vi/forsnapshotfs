@@ -9,7 +9,7 @@
 int main(int argc, char* argv[]) {
     if(argc<2 || !strcmp(argv[1], "--help")) {
         fprintf(stderr, "Usage:\n"
-            "    fsfs-debug print-index blockgroup_size file.idx [bgstart [bgcount]]\n"
+            "    fsfs-debug print-index block_size blockgroup_size file.idx [bgstart [bgcount]]\n"
             "    fsfs-debug comp-stats blockgroup_size file.idx\n"
             "    fsfs-debug decompress-block file.dat offset compressed_size > output\n"
             "    fsfs-debug decompress-block2 < input > output\n"
@@ -21,13 +21,15 @@ int main(int argc, char* argv[]) {
     }
     if(!strcmp(argv[1], "print-index")) {
         int bgsize=1020;
+        int block_size=4096;
         long long int bgstart = 0;
         long long int bgcount = -1;
-        assert(argc>=4 && argc<=6);
-        sscanf(argv[2], "%d", &bgsize);
-        const char* idxfile = argv[3];
-        if(argc>=5) sscanf(argv[4], "%lld", &bgstart);
-        if(argc>=6) sscanf(argv[5], "%lld", &bgcount);
+        assert(argc>=5 && argc<=7);
+        sscanf(argv[2], "%d", &block_size);
+        sscanf(argv[3], "%d", &bgsize);
+        const char* idxfile = argv[4];
+        if(argc>=6) sscanf(argv[5], "%lld", &bgstart);
+        if(argc>=7) sscanf(argv[6], "%lld", &bgcount);
         
         int bglen = bgsize * 2 + 8;
         
@@ -67,6 +69,10 @@ int main(int argc, char* argv[]) {
                 printf("block %lld: ", i + bgstart*bgsize);
                 if(q==-0x8000) {
                     printf("zero\n");
+                } else
+                if(q==-0x7FFF) {
+                    printf("uncompressed (%d bytes) at 0x%016llX\n", block_size, baseoffset+accum);
+                    accum+=block_size;
                 } else
                 if(q==0) {
                     printf("unallocated\n");
@@ -108,6 +114,7 @@ int main(int argc, char* argv[]) {
         unsigned long long int invals = 0;
         unsigned long long int refs[64];
         unsigned long long int total = 0;
+        unsigned long long int uncompressibles = 0;
         memset(&refs, 0, sizeof(refs));
         memset(stats, 0, 8*32768);
         
@@ -126,6 +133,9 @@ int main(int argc, char* argv[]) {
                 if(q>0) {
                     ++stats[q];
                 }else
+                if(q==-0x7FFF) {
+                    ++uncompressibles;
+                }else
                 if(q==-0x8000) {
                     ++zeroes;
                 }else
@@ -142,14 +152,13 @@ int main(int argc, char* argv[]) {
         }
         
         total-=trailing_zero_counter;
-        zeroes-=trailing_zero_counter;
         
         long long int running = 0;
         
-        printf("total  : %lld (100%%) ; 0%% \n", total);
+        printf("total: %lld (100%%) ; 0%% \n", total);
         
         running+=zeroes;
-        if(zeroes>0)printf("zero   : %lld (%g%%) ; %g%%\n",   zeroes, 
+        if(zeroes>0)printf("zero: %lld (%g%%) ; %g%%\n",   zeroes, 
             100.0*zeroes/total, 100.0*running/total);
         
         for(i=0; i<64; ++i) {
@@ -162,6 +171,10 @@ int main(int argc, char* argv[]) {
             if(stats[i]>0)printf("compressed[%d]: %lld (%g%%) ; %g%%\n",  i, stats[i],
                     100.0*stats[i]/total, 100.0*running/total);
         }
+        running+=uncompressibles;
+        if(uncompressibles>0)printf("uncompressible: %lld (%g%%) ; %g%%\n",   uncompressibles, 
+            100.0*uncompressibles/total, 100.0*running/total);
+        
         running+=invals;
         if(invals>0)printf("invalid: %lld (%g%%) ; %g%%\n",   invals, 
                 100.0*invals/total, 100.0*running/total);
