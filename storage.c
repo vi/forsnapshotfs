@@ -36,7 +36,8 @@ struct storage__file {
     int opened_for_writing;
     int best_compression;
     
-    long long int writestat_new;
+    long long int writestat_compressed;
+    long long int writestat_uncompressible;
     long long int writestat_reused;
     long long int writestat_hashcoll;
     long long int writestat_zero;
@@ -226,7 +227,9 @@ struct storage__file* storage__creat(
         fflush(c->description_file);
     }
     
-    c->writestat_new = 0;
+    c->writestat_compressed = 0;
+    c->writestat_uncompressible = 0;
+    c->writestat_dblrefs = 0;
     c->writestat_reused = 0;
     c->writestat_hashcoll = 0;
     c->writestat_zero = 0;
@@ -354,9 +357,11 @@ static void storage__append_block_simple(struct storage__file* c, unsigned char*
         int written = fwrite(buf, 1, c->block_size, c->data_file);
         assert(written == c->block_size);
         len = -0x7FFF; // 80 01  on disk
+        ++c->writestat_uncompressible;
     } else {
         int written = fwrite(c->outbuf, 1, len, c->data_file);
         assert(written == len);
+        ++c->writestat_compressed;
     }
     
     c->current_index_entry->offsets[inside_block_group_offset] = len;
@@ -422,20 +427,21 @@ void storage__append_block(struct storage__file* c, unsigned char* buf) {
             return;
         }
     }
-        
-    ++c->writestat_new;
+
     storage__append_block_simple(c, buf, hash);
 }
 
 
 void storage__get_writestat(const struct storage__file* c
-        ,long long int *stat_new
+        ,long long int *stat_compressed
+        ,long long int *stat_uncompressible
         ,long long int *stat_reused
         ,long long int *stat_hashcoll
         ,long long int *stat_zero
         ,long long int *stat_dblref
     ) {
-        if(stat_new)      *stat_new      = c->writestat_new     ;
+        if(stat_compressed)     *stat_compressed    = c->writestat_compressed    ;
+        if(stat_uncompressible) *stat_uncompressible= c->writestat_uncompressible;
         if(stat_reused)   *stat_reused   = c->writestat_reused  ;
         if(stat_hashcoll) *stat_hashcoll = c->writestat_hashcoll;
         if(stat_zero)     *stat_zero     = c->writestat_zero    ;

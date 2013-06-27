@@ -61,12 +61,12 @@ int main(int argc, char* argv[]) {
         }
         storage__append_block(f, buf);
     }
-    long long int snew,sreused,shashcoll,szero,sdblref;
-    storage__get_writestat(f, &snew, &sreused, &shashcoll, &szero, &sdblref);
+    long long int scompressed,suncompressible,sreused,shashcoll,szero,sdblref;
+    storage__get_writestat(f, &scompressed, &suncompressible, &sreused, &shashcoll, &szero, &sdblref);
     storage__close(f);
     free(buf);
     fprintf(stdout, 
-        "Completed. new: %lld   reused: %lld   hashcoll: %lld  zero: %lld  dblref: %lld\n",
-         snew, sreused, shashcoll, szero, sdblref);
+        "Completed. compressed: %lld   uncompressible: %lld  reused: %lld   hashcoll: %lld  zero: %lld  dblref: %lld\n",
+         scompressed, suncompressible, sreused, shashcoll, szero, sdblref);
     return 0;
 }

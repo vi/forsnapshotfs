@@ -30,7 +30,8 @@ long long int storage__get_number_of_blocks(const struct storage__file* c);
 long long int storage__get_number_of_blocks2(const char* dirname, const char* basename) ;
     
 void storage__get_writestat(const struct storage__file* c
-        ,long long int *stat_new
+        ,long long int *stat_compressed
+        ,long long int *stat_uncompressible
         ,long long int *stat_reused
         ,long long int *stat_hashcoll
         ,long long int *stat_zero
