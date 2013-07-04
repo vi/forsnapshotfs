@@ -4,6 +4,7 @@
 
 #include "simplecow.h"
 
+// Created by Vitaly "_Vi" Shukela in 2013. License=MIT
 
 struct extent {
     long long int start;

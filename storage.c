@@ -11,6 +11,8 @@
 #include "hash.h"
 #include "storage.h"
 
+// Created by Vitaly "_Vi" Shukela in 2013. License=MIT
+
 #define CHUNK 65536
 
 struct storage__file {

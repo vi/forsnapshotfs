@@ -1,3 +1,16 @@
+// Simple storage for large files supporting block compression,
+// incremental backup (reusing blocks from previous "dependency" file when
+// writing a new file), blockwise compression.
+// Files are written only using special tool fsfs-write and then can be read
+// using fsfs-read or using fsfs-mount FUSE filesystem (for random access)
+// fsfs-mount also provides simple in-memory copy-on-write for replaying jourals.
+
+
+// Created by Vitaly "_Vi" Shukela in 2013. License=MIT
+
+#pragma once
+
+
 struct storage__file;
 
 size_t storage__get_block_size(const struct storage__file* c) ;
