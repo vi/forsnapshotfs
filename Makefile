@@ -34,3 +34,7 @@ static: ${STORAGE}
 		${CC} -static ${LDFALGS} ${CFLAGS} ${STORAGE} verify.c -llzo2 -o fsfs-verify-static
 		${CC} -static ${LDFALGS} ${CFLAGS} ${STORAGE} debug.c  -llzo2 -o fsfs-debug-static
 		${CC} -static ${LDFLAGS} ${CFLAGS} ${STORAGE} simplecow.c mount.c -llzo2 $(shell pkg-config fuse --cflags --libs) -lpthread -lrt -ldl  -o fsfs-mount-static
+		
+		
+test:
+		bash test.sh
