@@ -124,3 +124,23 @@ Example:
         0x03FC: 34 (end of file)
     
 Currently maximum the number of dependencies is limited to 64.
+
+Comparison with [bup](https://github.com/bup/bup)
+---
+If you are interested in forsnapshotfs, you may also like [bup](https://github.com/bup/bup).
+
+Differences:
+
+* fsfs is simpler. it is implemented in C. The algorithm is simpler that bup's;
+* `bup` compress better;
+* fsfs require you to specify previous backup's name;
+* `bup` also can manage many little files, file modes, etc;
+* `bup` have remote access features;
+* `fsfs-mount` have little additional cosy feature: simplistic in-memory copy-on-write to allow journal replay when mounting a filesystem.
+
+Similaritues:
+
+* Compression support;
+* Efficient storage of incremental snapshots (fsfs's deduplication is simpler and won't work when offsets do change);
+* Random access to stored files, FUSE interface;
+* Both can accept snapshot input from stdin.
