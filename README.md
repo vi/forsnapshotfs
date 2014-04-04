@@ -131,9 +131,9 @@ If you are interested in forsnapshotfs, you may also like [bup](https://github.c
 
 Differences:
 
-* fsfs is simpler. it is implemented in C. The algorithm is simpler that bup's;
+* fsfs is simpler. it is implemented in C. The algorithm is simpler than bup's one;
 * `bup` compress better;
-* fsfs require you to specify previous backup's name;
+* fsfs require you to specify previous backup's name when creating new one;
 * `bup` also can manage many little files, file modes, etc;
 * `bup` have remote access features;
 * `fsfs-mount` have little additional cosy feature: simplistic in-memory copy-on-write to allow journal replay when mounting a filesystem.
@@ -143,4 +143,5 @@ Similaritues:
 * Compression support;
 * Efficient storage of incremental snapshots (fsfs's deduplication is simpler and won't work when offsets do change);
 * Random access to stored files, FUSE interface;
-* Both can accept snapshot input from stdin.
+* Both can accept snapshot input from stdin;
+* Newer backups depend on earlier ones.
