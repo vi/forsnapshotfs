@@ -136,7 +136,7 @@ Differences:
 * fsfs require you to specify previous backup's name when creating new one;
 * `bup` also can manage many little files, file modes, etc;
 * `bup` have remote access features;
-* `fsfs-mount` have little additional cosy feature: simplistic in-memory copy-on-write to allow journal replay when mounting a filesystem.
+* `fsfs-mount` have little additional cosy feature: simplistic in-memory copy-on-write to allow journal replay when mounting a filesystem. *Update*: Implemented this feature as separate filesystem: https://github.com/vi/simplecowfs. You can use it as overlay for mounting filesystem images from `bup fuse`.
 
 Similaritues:
 
